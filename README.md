@@ -1,137 +1,81 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/clan-2Ft)
+# Element Island — Infinite Procedural 2D Adventure Game
 
-# Projet de programmation — Jeu d'exploration en monde infini
+**Element Island** is an isometric exploration game written in C++ and inspired by the Avatar universe. The player controls a hero mastering the four elements (Fire, Water, Air, Earth) and navigates procedurally generated thematic islands.
 
-## Membres du groupe
+The primary objective is to complete four elemental quests: converse with island guardians, fulfill their trials, and recover ancient relics to achieve victory. Dynamic enemies spawn at regular intervals and scale in difficulty over time.
 
-| Matricule |
-|----------------|
-| 609539         |
-|        615667        |
-|597738                |
-|606644      |
+---
 
-## Instructions de lancement
-l'exécutable se trouve dans le dossier : info-h2001-projet-ba2-v-e-r-g -> build -> bin -> main.exe
+## Authors / Team
+Academic project developed for the **Object-Oriented Programming** course (INFO-H2001) at **Université libre de Bruxelles (ULB)** (Academic Year 2025–2026).
 
-## Description du projet
+* Emma Dehaeck
+* Ranya Jabrazko
+* Vladimir Tranca
+* Gio Bao
 
-**Element Island** est un jeu d'exploration isométrique inspiré de l'univers d'Avatar : Le Dernier Maître de l'Air. Le joueur incarne un avatar capable de maîtriser les quatre éléments — Feu, Eau, Air et Terre — et doit explorer un monde composé d'îles thématiques générées procéduralement.
+---
 
-L'objectif est de compléter les quatre quêtes élémentales : parler aux gardiens de chaque île, accomplir leur défi, et récupérer les reliques. Une fois les quatre reliques obtenues, le joueur remporte la victoire. Des ennemis apparaissent régulièrement et deviennent de plus en plus puissants avec le temps.
+## Features
 
-## Deadline
+### Core Implementation
+- **Class Hierarchy & Polymorphism:** Abstract base class `Entity` inherited by `Player`, `Enemy`, and `Neutral`. Entities are stored within a `std::vector<std::unique_ptr<Entity>>` and managed via runtime polymorphism.
+- **2D Isometric Engine:** Custom isometric rendering using SFML 3.0.
+- **Infinite World & Dynamic Chunks:** 32×32 tile chunks loaded and unloaded dynamically based on player proximity to optimize memory usage.
+- **Procedural Generation:** Dual Voronoi noise generation (`shapeNoise` and `biomeNoise`) via FastNoiseLite to synthesize oceans, coastlines, and elemental biomes. Deterministic relic placement implemented using chunk-coordinate hashing.
+- **State Persistence:** World modifications (e.g., extinguished volcanoes, constructed bridges) are recorded in a `TileChange` structure and re-applied when chunks reload.
+- **Serialization:** Full game state (player position, HP, stats, abilities, quests, boat status, modified tiles) saved to JSON format via `nlohmann/json` (manual trigger with `F5` or automatic on exit).
+- **Interactive Environment:** Impassable water tiles, interactable/destructible elements (volcanoes extinguished with Water powers, collectible fragments, relic pick-ups).
+- **Autonomous Behaviors:** Dynamic pathfinding/pursuit AI for enemies; autonomous wandering routines for Neutral NPCs.
+- **Progression System:** Upgradable elemental powers (`firePower`, `waterPower`, `airPower`, `earthPower`), progressive difficulty scaling (`enemyPower`), and multi-stage quest progression.
 
-Le projet doit être soumis pour le 15 Mai à 23h59. Toute soumission après cette date ne sera pas prise en compte.
+### Additional Highlights
+- Directional animated spritesheets for characters and creatures.
+- Interactive NPC dialogue tree and distinct quest storylines per biome.
+- Navigable boat mechanics with treasure maps for exploration.
+- Real-time compass tracking unvisited NPCs.
+- Procedural title screen with coded elemental rendering and looping audio.
+- Persistent high-score tracker (kills and quest completion time).
 
-Lisez bien les instructions de l'énoncé du projet à ce sujet.
+---
 
-## Fonctionnalités implémentées
+## Technical Design & Architecture
 
-### Contraintes obligatoires
+* **Procedural Generation:** Uses FastNoiseLite Voronoi algorithms. `shapeNoise` determines elevation and ocean boundaries; `biomeNoise` partitions regions into elemental archetypes.
+* **Chunk & Memory Management:** Chunks are kept lightweight; only visible chunks reside in active memory. Player-induced environmental changes are decoupled into a lightweight delta-log (`TileChange`) to preserve determinism while allowing dynamic persistence.
+* **Polymorphic Architecture:** Unified entity management loop operating on `std::unique_ptr<Entity>`, abstracting drawing, physics, and state updates.
+* **Optimized Isometric Rendering:** Chunk terrain is batched into a single `sf::VertexArray` constructed directly from tile spritesheets using projection offsets ($X_{\text{step}} = 26.0\text{px}$, $Y_{\text{step}} = 13.0\text{px}$).
 
-- [x] Un projet GitHub
-- [x] Hiérarchie de classes (héritage, polymorphisme) — `Entity` est la classe de base de `Player`, `Enemy` et `Neutral` ; toutes les entités sont stockées dans un `vector<unique_ptr<Entity>>` et gérées via polymorphisme
-- [x] Affichage 2D — interface graphique isométrique avec SFML 3.0
-- [x] Monde infini — système de chunks de 32×32 tuiles chargés et déchargés dynamiquement autour du joueur
-- [x] Génération procédurale du terrain et des entités — deux bruits de Voronoï (`shapeNoise` et `biomeNoise`) via FastNoiseLite pour les îles et les biomes ; placement déterministe des reliques par hash
-- [x] Persistance en mémoire — les modifications de tiles (ponts créés, volcans éteints) sont conservées dans une liste de `TileChange` et réappliquées au rechargement des chunks
-- [x] Sauvegarde et chargement — sauvegarde JSON (nlohmann/json) de la position, HP, kills, pouvoirs, quêtes et bateau via F5 ou à la fermeture
-- [x] Éléments infranchissables — l'eau (tile 0) est infranchissable à pied
-- [x] Éléments interactifs ou destructibles — volcans éteignables avec le pouvoir Eau ; fragments collectables en bateau ; reliques ramassables en marchant dessus
-- [x] Entité autonome ou semi-autonome — les ennemis poursuivent le joueur de façon autonome ; les Neutrals se déplacent aléatoirement sur leur île
-- [x] Mécanisme de progression — 4 pouvoirs élémentaux améliorables (firePower, waterPower, airPower, earthPower) en ramassant des reliques ; difficulté croissante via `enemyPower` ; système de 4 quêtes
-
-### Bonus
-
-- [x] Interface graphique (bibliothèque : SFML 3.0)
-- [x] Sprites animés directionnels pour le joueur (16 lignes × 6 frames), les ennemis et les Neutrals (Fisherman spritesheet)
-- [x] Système de quêtes avec dialogues et objectifs distincts par île
-- [x] Bateau navigable avec carte au trésor pour la quête de l'île de Terre
-- [x] Boussole dynamique pointant vers les Neutrals non encore visités
-- [x] Écran de titre animé avec les 4 éléments dessinés en code
-- [x] Musique de fond en boucle (island_0.ogg)
-- [x] Système de meilleurs scores sauvegardé entre les parties (kills + temps de complétion des quêtes)
-- [x] Animation de complétion de quête (anneaux colorés)
-
-## Compilation et exécution
-
-### Prérequis
-
-- CMake 3.28 ou supérieur
-- Compilateur C++17 (g++, clang++, MSVC)
-- Connexion Internet pour le premier build (SFML et nlohmann/json téléchargés automatiquement via FetchContent)
-
-### Instructions
-
-```bash
-cmake -B build          # Génère les fichiers de build
-cmake --build build     # Compile le projet
-./build/bin/main        # Lance le jeu
-```
-
-L'exécutable se trouve dans `build/bin/main`.
-
-## Contrôles
-
-| Touche | Action |
-|--------|--------|
-| Z / Q / S / D | Déplacer le joueur |
-| 1 | Sélectionner l'élément Feu |
-| 2 | Sélectionner l'élément Eau |
-| 3 | Sélectionner l'élément Air |
-| 4 | Sélectionner l'élément Terre |
-| Espace | Utiliser le pouvoir élémental |
-| E | Parler au Neutral le plus proche |
-| X | Fermer la boîte de dialogue |
-| B | Embarquer / Débarquer du bateau |
-| F5 | Sauvegarder la partie |
-| Échap | Quitter |
-| R | Rejouer (écran Game Over / Victoire) |
-
-## Architecture du projet
-
-```
+```text
 src/
-├── main.cpp              — Boucle principale, gestion des événements, rendu
-├── Entity.h/cpp          — Classe de base abstraite (position, HP, draw, update)
-├── Player.h/cpp          — Joueur : déplacement, pouvoirs, HUD, animation
-├── Enemy.h/cpp           — Ennemi : poursuite autonome, barres de vie, sprites
-├── Neutral.h/cpp         — PNJ gardien : statique sur son île, dialogue
-├── World.h/cpp           — Gestion des chunks, sauvegarde, collisions
-├── Chunk.h/cpp           — Génération procédurale d'un chunk, maillage isométrique
-├── Tile.h/cpp            — Tuile individuelle (id)
-├── TileRegistry.h/cpp    — Registre des types de tuiles (nom, walkable, interactable)
-├── TileChange.h          — Structure pour stocker les modifications de tiles
-├── LoadedChunk.h         — Structure associant un chunk à ses coordonnées relatives
-├── NoiseGen.h/cpp        — Encapsulation de FastNoiseLite (getShape + getBiome)
-├── FastNoiseLite.h       — Bibliothèque de génération de bruit
-├── Island.h/cpp          — Structure d'île (non finalisée)
-├── QuestManager.h/cpp    — Système de quêtes, dialogues, HUD des reliques
-├── Boat.h/cpp            — Navigation, carte au trésor, collecte de fragments
-├── RelicRender.h/cpp     — Rendu des reliques sur les tiles
-├── TileFinder.h/cpp      — Recherche de tiles par type dans les chunks chargés
-├── Compass.h/cpp         — Boussole pointant vers les Neutrals
-├── ScoreSave.h/cpp       — Chargement et sauvegarde des meilleurs scores (JSON)
-├── TitleScreen.h/cpp     — Écran de titre animé
-└── GameOver.h/cpp        — Écran de Game Over avec meilleurs scores
+├── main.cpp              — Main game loop, event handling, rendering pipeline
+├── Entity.h/cpp          — Abstract base entity (position, HP, draw, update)
+├── Player.h/cpp          — Player entity: input handling, combat, HUD, animations
+├── Enemy.h/cpp           — Autonomous enemy AI and health systems
+├── Neutral.h/cpp         — Guardian NPC: idle AI and dialogue system
+├── World.h/cpp           — World management, chunk streaming, collision pipeline
+├── Chunk.h/cpp           — Procedural chunk generation, isometric vertex arrays
+├── Tile.h/cpp            — Individual tile definitions
+├── TileRegistry.h/cpp    — Metadata registry (walkable, interactable)
+├── TileChange.h          — Delta tracking structure for modified tiles
+├── LoadedChunk.h         — Chunk coordinate mapping
+├── NoiseGen.h/cpp        — FastNoiseLite wrapper (shape and biome sampling)
+├── FastNoiseLite.h       — Noise generation library
+├── Island.h/cpp          — Island clustering structure
+├── QuestManager.h/cpp    — Quest states, dialogues, and relic HUD
+├── Boat.h/cpp            — Boat navigation, fragments, and treasure map mechanics
+├── RelicRender.h/cpp     — Relic layer rendering
+├── TileFinder.h/cpp      — Spatial lookup utility for chunks
+├── Compass.h/cpp         — Directional compass pointing to objectives
+├── ScoreSave.h/cpp       — High-score JSON persistence
+├── TitleScreen.h/cpp     — Animated main menu
+└── GameOver.h/cpp        — Game over / victory screen
+
 assets/
-├── textures/             — Spritesheets (joueur, ennemis, neutral, bateau, tiles)
-├── fonts/                — Police arial.ttf
-└── island_0.ogg          — Musique de fond
+├── textures/             — Spritesheets (characters, enemies, boat, terrain)
+├── fonts/                — Typography assets
+└── island_0.ogg          — Soundtrack
+
 savefiles/
-├── savefile.json         — Sauvegarde de la partie en cours
-└── highscore.json        — Meilleur score (kills + temps)
-```
-
-## Choix techniques
-
-**Génération procédurale** : On utilise deux bruits de Voronoï via FastNoiseLite — `shapeNoise` pour savoir si une position est dans l'océan, sur la plage ou sur une île, et `biomeNoise` pour choisir le type d'île (Feu, Eau, Air ou Terre). Les reliques sont placées avec un hash déterministe basé sur les coordonnées du chunk, ce qui fait que la carte est toujours la même à chaque lancement.
-
-**Système de chunks** : Le monde est découpé en chunks de 32×32 tuiles. On charge uniquement les chunks visibles autour du joueur et on décharge les autres pour ne pas surcharger la mémoire. Les modifications faites en jeu (volcans éteints, ponts créés) sont sauvegardées dans une liste de `TileChange` et réappliquées automatiquement quand un chunk est rechargé.
-
-**Polymorphisme** : `Player`, `Enemy` et `Neutral` héritent tous de la classe de base `Entity`. On les stocke ensemble dans un `vector<unique_ptr<Entity>>` et on utilise `dynamic_cast` pour accéder aux comportements spécifiques de chaque type. Ça nous a permis de gérer toutes les entités avec une seule boucle.
-
-**Sauvegarde** : On sauvegarde tout en JSON avec nlohmann/json — la position et les stats du joueur, l'état des quêtes, la position du bateau et ses fragments, et toutes les modifications de tiles. Ça nous semblait plus lisible et plus facile à déboguer qu'un format binaire.
-
-**Rendu isométrique** : Chaque chunk construit un `sf::VertexArray` de triangles directement depuis la spritesheet. Les positions isométriques sont calculées avec `gridStepX = 26.0f` et `gridStepY = 13.0f`, qui correspondent à la moitié et au quart de la taille d'une tuile (52×52px).
+├── savefile.json         — Active game state
+└── highscore.json        — High-score records
